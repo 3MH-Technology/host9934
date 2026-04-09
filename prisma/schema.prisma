@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bots      Bot[]
+}
+
+model Bot {
+  id          String   @id @default(cuid())
+  name        String
+  language    Language
+  status      Status   @default(STOPPED)
+  containerId String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  envVars     EnvVar[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model EnvVar {
+  id    String @id @default(cuid())
+  key   String
+  value String
+  botId String
+  bot   Bot    @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@unique([botId, key])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Language {
+  PYTHON
+  PHP
+}
+
+enum Status {
+  STOPPED
+  RUNNING
+  ERROR
+  BUILDING
+}
